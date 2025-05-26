@@ -12,10 +12,6 @@ class Database {
     
     public function __construct()
     {
-        echo HOST;
-        echo PASSWORD;
-        echo USERNAME;
-        echo DATABASE;
         $this->host = HOST;
         $this->password = PASSWORD;
         $this->username = USERNAME;

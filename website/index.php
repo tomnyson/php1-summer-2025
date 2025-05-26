@@ -14,12 +14,8 @@ if(!empty($connect)) {
     $query = "select * from DanhMuc";
     $stmt = $connect->prepare($query);
     $stmt->execute();
-    $stmt->setFetchMode(PDO::FETCH_OBJ);
-    $listDanhMuc = $stmt->fetchAll();
-    foreach($listDanhMuc as $danhmuc) {
-        echo $danhmuc->maLoai;
-        // echo $danhmuc["TenLoai"];
-    }
+    $stmt->setFetchMode(PDO::FETCH_ASSOC);
+     
 } else {
     echo "no connect";
 }
