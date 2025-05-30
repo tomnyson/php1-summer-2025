@@ -1,7 +1,7 @@
 <?php
 session_start();
 require_once "Database.php";
-
+var_dump("go here");
 $db = new Database();
 $connect = $db->getConnection();
 
@@ -59,10 +59,7 @@ $danhmuc = $stmt->fetchAll();
     </div>
     <div class="container mt-5">
         <div class="row">
-
-            <div class="col-sm-4">
-                <a href="/danhmuc.php"> Danh Mục</a>
-            </div>
+            <?php include "./includes/sidebar.php" ?>
             <div class="col-sm-8">
                 <?php
                 if (isset($_SESSION['message']) && !empty($_SESSION['message'])) {

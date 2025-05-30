@@ -80,10 +80,9 @@ if ($_SERVER["REQUEST_METHOD"] == 'GET') {
                         </div>
                     </div>
                 </div>
-    <?php     }
-     else {
-        echo "Id không tồn tại";    
-    }
+    <?php     } else {
+            echo "Id không tồn tại";
+        }
     }
 } ?>
     <?php
