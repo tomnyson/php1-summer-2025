@@ -1,6 +1,5 @@
 <?php
-session_start();
-require_once SITE_ROOT. "/Database.php";
+require_once  "Database.php";
 $db = new Database();
 $connect = $db->getConnection();
 

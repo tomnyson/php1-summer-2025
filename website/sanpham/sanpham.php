@@ -2,8 +2,7 @@
 ini_set('display_errors', '1');
 ini_set('display_startup_errors', '1');
 error_reporting(E_ALL);
-require_once "Database.php";
-
+require_once "../Database.php";
 $db = new Database();
 $connect = $db->getConnection();
 
@@ -36,9 +35,9 @@ $list_sanpham = $stmt->fetchAll();
     </div>
     <div class="container mt-5">
         <div class="row">
-            <?php include "./includes/sidebar.php" ?>
+            <?php include SITE_PATH . '/includes/sidebar.php';?>
             <div class="col-sm-8">
-               <?php include "./includes/message.php" ?>
+               <?php include SITE_PATH."/includes/message.php" ?>
                 <h4>Quản lý sản phẩm</h4>
                 <!-- form -->
                  <a href="sanpham/them_sanpham.php" class="btn btn-success">Thêm mới</a>
