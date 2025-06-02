@@ -9,7 +9,7 @@
 </head>
 <body>
   <div class="auth-container">
-    <h2>Join the Style Club</h2>
+    <h2>Electric Store </h2>
     <form id="registerForm">
       <div class="mb-3">
         <label>Email</label>
@@ -26,19 +26,6 @@
         Already have an account? <a href="login.html">Login</a>
       </div>
     </form>
-    <script>
-      document.getElementById("registerForm").onsubmit = async (e) => {
-        e.preventDefault();
-        const data = Object.fromEntries(new FormData(e.target));
-        const res = await fetch('/api/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-        const result = await res.json();
-        alert(result.message || 'Registered successfully');
-      };
-    </script>
   </div>
 </body>
 </html>
