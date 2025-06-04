@@ -39,6 +39,7 @@
             }
           }
         ?>
+      
         <label>Email</label>
         <input type="email" name="email" class="form-control" required />
       </div>
