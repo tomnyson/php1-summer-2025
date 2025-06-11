@@ -42,7 +42,27 @@
   </style>
 </head>
 <body>
-  
+    <?php
+  require "./db_utils.php";
+  $db_util = new DB_UTILS();
+  $maSP = $_GET['id'];
+  if(empty($maSP)) {
+    header('Location: index.php');
+    exit();
+  }
+  // check ton tai:
+
+  $chitietSanPham = $db_util->getOne('select * from sanpham sp left join danhmuc dm on sp.maLoai = dm.maLoai where sp.maSP = ?',[$maSP]);
+  if(empty($chitietSanPham)) {
+   header('Location: index.php');
+    exit();
+  }
+  // echo "<pre>";
+  // var_dump( $dsSanPham);
+  // echo "</pre>";
+  // die;
+
+  ?>
   <div class="container" style="max-width: 980px; margin-top: 42px;">
     <!-- Navigation menu -->
     <nav class="menu d-flex align-items-center mb-4">
@@ -59,13 +79,13 @@
         </div>
       </div>
       <div class="col-lg-7">
-        <div class="product-title mb-2">iPhone 15 Pro</div>
-        <div class="product-category mb-3">Smartphone</div>
+        <div class="product-title mb-2"><?php echo $chitietSanPham['tenSP']; ?></div>
+        <div class="product-category mb-3"><?php echo $chitietSanPham['TenLoai']; ?></div>
         <div class="product-desc">
-          Experience the power of the all-new iPhone 15 Pro with A17 Bionic chip, stunning camera, and beautiful design. The perfect blend of performance, style, and innovation.
+          <?php echo $chitietSanPham['moTa']; ?>
         </div>
         <div class="d-flex align-items-center mb-3">
-          <span class="qty-label">Available:</span> <span class="badge bg-success me-3">12</span>
+          <span class="qty-label">Available:</span> <span class="badge bg-success me-3"><?php echo $chitietSanPham['soLuong'] ?></span>
           <span id="star-summary" class="align-middle ms-2"></span>
         </div>
         <form action="cart.html" method="get" class="row g-2 align-items-center mb-3" style="max-width:300px;">
@@ -74,7 +94,7 @@
             <label for="qty" class="form-label qty-label">Qty:</label>
           </div>
           <div class="col-auto">
-            <input type="number" min="1" max="12" value="1" name="qty" id="qty" class="form-control" style="width:70px;" />
+            <input type="number" min="1" max="<?php echo $chitietSanPham['soLuong'] ?>" value="1" name="qty" id="qty" class="form-control" style="width:70px;" />
           </div>
           <div class="col-auto">
             <button type="submit" class="btn btn-warning add-cart-btn">
