@@ -37,6 +37,7 @@
 <body>
    <?php 
           require "./db_utils.php";
+          $message = "";
           $db_util = new DB_UTILS();
           $dsDanhMuc = $db_util->getAll('select * from DanhMuc');
           $dsSanPham = $db_util->getAll('select * from sanpham sp left join danhmuc dm on sp.maLoai = dm.maLoai  ');
@@ -44,24 +45,59 @@
           // var_dump( $dsSanPham);
           // echo "</pre>";
           // die;
+        if($_SERVER['REQUEST_METHOD'] == "POST") {
+          if(isset($_POST['action'])) {
+            // kiem tra dang nhap
+            var_dump($_SESSION);
+            if(empty($_SESSION['user_id'])) {
+              echo "chưa đăng nhập";
+              header('Location: login.php');
+              exit; 
+            }
+          }
+        
+          // thêm vào giỏ hàng
+          /**
+           * b1: kt xem giỏ hàng đã có sp chưa 
+           * nếu có +1 sl
+           * nếu chưa thì thêm 1 dòng record mới
+           */
+          $checkSPTonTai = "select * from carts where user_id =? and product_id = ?";
+          $cart = $db_util->getOne($checkSPTonTai,[$_SESSION['user_id'], $_POST['maSP']]);
+          $total = 0;
+          if(empty($cart)) {
+            //case them moi
+            $query_them = "INSERT INTO carts(user_id, product_id,quantity) values (?,?,?)";
+            $check_insert = $db_util->execute($query_them, [$_SESSION['user_id'], $_POST['maSP'], 1]);
+            $_SESSION['message'] = "Đã thêm sản phẩm vào giỏ hàng";
+          } else {
+            // cap nhat so luong
+            $query_update = "UPDATE carts set quantity = ? where id=?";
+            $new_quantity = $cart['quantity'] + 1;
+            // hết hàng
+            $check_update = $db_util->execute($query_update,[$new_quantity, $cart['id']]);
+            $_SESSION['message'] = 'cập nhật giỏ hàng thành công';
+          }
+        }
 
     ?>
   <div class="container" style="max-width: 1150px; margin-top: 36px;">
     <!-- Menu -->
-    <nav class="menu d-flex align-items-center mb-4">
-      <a href="index.html" class="active">Trang chủ</a>
-      <a href="product-list.php">Sản phẩm</a>
-      <a href="about.html">Giới thiệu</a>
-      <a href="contact.html">Liên hệ</a>
-      <a href="cart.html">Giỏ hàng</a>
-      <a href="profile.html">Tài khoản</a>
-    </nav>
+    <?php 
+      include "./includes/menu.php";
+    ?>
     <!-- Banner/Hero -->
     <div class="hero text-center mb-5">
       <div class="hero-title mb-2">Cửa hàng Công nghệ Uy tín</div>
       <div class="hero-desc">Nơi bạn tìm thấy điện thoại, laptop, phụ kiện chất lượng và dịch vụ tốt nhất.<br />Khuyến mãi hấp dẫn mỗi ngày!</div>
       <a href="products.html" class="btn btn-warning cta-btn shadow-sm">Khám phá ngay</a>
     </div>
+          <?php
+                if (isset($_SESSION['message']) && !empty($_SESSION['message'])) {
+                    echo "<div class='alert alert-success'>$_SESSION[message]
+</div>";
+                }
+                ?>
     <!-- Danh mục nổi bật -->
     <div class="mb-5">
       <div class="section-title">Danh mục nổi bật</div>
@@ -88,7 +124,11 @@
             <div class="product-category"><?php echo $sanpham['TenLoai'];?></div>
             <div class="my-2">Quantity: <?php echo $sanpham['soLuong'];?></div>
             <a href="product-detail.html?id=1" class="btn btn-outline-primary mb-2 w-100">Xem chi tiết</a>
-            <a href="cart.html?add=1" class="btn btn-warning add-cart-btn w-100">Thêm vào giỏ</a>
+            <form method="POST" action="">
+              <input type="hidden" name="maSP" value="<?php echo $sanpham['maSP'];?>"/>
+             <button type="submit" name="action" value="add_cart" class="btn btn-warning add-cart-btn w-100">Thêm vào giỏ</button>
+            </form>
+           
           </div>
         </div>
         <?php endforeach; ?>

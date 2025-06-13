@@ -150,12 +150,9 @@
 
   ?>
   <div class="container" style="max-width: 1150px; margin-top: 48px;">
-    <nav class="menu d-flex align-items-center mb-4">
-      <a href="index.html" class="active">Home</a>
-      <a href="products.html">Products</a>
-      <a href="about.html">About</a>
-      <a href="contact.html">Contact</a>
-    </nav>
+   <?php 
+      include "./includes/menu.php";
+    ?>
     <div class="row">
       <!-- Sidebar category -->
       <aside class="col-lg-3 sidebar">
