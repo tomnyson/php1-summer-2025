@@ -40,4 +40,8 @@ class DB_UTILS {
         return $value;
     }
 
+    function getLastInsertId() {
+        return $this->connection->lastInsertId();
+    }
+
 }

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <title>Shopping Cart & Checkout</title>
@@ -7,30 +8,128 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Roboto&display=swap" rel="stylesheet" />
   <style>
-    body { background: #f8f9fa; font-family: 'Roboto', Arial, sans-serif; }
-    .menu { background: #fff; padding: 1.2rem 1rem; border-radius: 1rem; margin-bottom: 2rem; }
-    .menu a { font-family: 'Playfair Display', serif; margin-right: 1.5rem; font-weight: 500; color: #0d6efd; text-decoration: none; }
-    .menu a.active, .menu a:hover { color: #fff; background: #0d6efd; border-radius: 6px; padding: 0.25rem 0.75rem; }
-    .cart-table td, .cart-table th { vertical-align: middle; }
-    .cart-product-img { width: 64px; height: 64px; object-fit: contain; border-radius: 8px; background: #f6f8fa; }
-    .cart-summary { background: #fff; border-radius: 1rem; box-shadow: 0 1px 8px #0001; padding: 1.5rem; }
-    .checkout-form { background: #fff; border-radius: 1rem; box-shadow: 0 1px 8px #0001; padding: 2rem; }
+    body {
+      background: #f8f9fa;
+      font-family: 'Roboto', Arial, sans-serif;
+    }
+
+    .menu {
+      background: #fff;
+      padding: 1.2rem 1rem;
+      border-radius: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .menu a {
+      font-family: 'Playfair Display', serif;
+      margin-right: 1.5rem;
+      font-weight: 500;
+      color: #0d6efd;
+      text-decoration: none;
+    }
+
+    .menu a.active,
+    .menu a:hover {
+      color: #fff;
+      background: #0d6efd;
+      border-radius: 6px;
+      padding: 0.25rem 0.75rem;
+    }
+
+    .cart-table td,
+    .cart-table th {
+      vertical-align: middle;
+    }
+
+    .cart-product-img {
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
+      border-radius: 8px;
+      background: #f6f8fa;
+    }
+
+    .cart-summary {
+      background: #fff;
+      border-radius: 1rem;
+      box-shadow: 0 1px 8px #0001;
+      padding: 1.5rem;
+    }
+
+    .checkout-form {
+      background: #fff;
+      border-radius: 1rem;
+      box-shadow: 0 1px 8px #0001;
+      padding: 2rem;
+    }
+
     @media (max-width: 991px) {
-      .cart-summary, .checkout-form { padding: 1rem; }
+
+      .cart-summary,
+      .checkout-form {
+        padding: 1rem;
+      }
     }
   </style>
 </head>
+
 <body>
   <?php
   require_once("./db_utils.php");
   $db_utils = new DB_UTILS;
   $total = 0;
   $query_getcart = "SELECT * FROM carts crt left join sanpham sp on crt.product_id = sp.maSP left join danhmuc dm on dm.maLoai = sp.maLoai WHERE user_id =?";
-  $result_getcart = $db_utils->getAll($query_getcart,[$_SESSION['user_id']]);
-  echo "<pre>";
-  var_dump($result_getcart);
-  echo "</pre>";
-   ?>
+  $result_getcart = $db_utils->getAll($query_getcart, [$_SESSION['user_id']]);
+  // echo "<pre>";
+  // var_dump($result_getcart);
+  // echo "</pre>";
+
+  if ($_SERVER['REQUEST_METHOD'] == "POST") {
+    if (isset($_POST['action'])) {
+      $action = $_POST['action'];
+      if ($action == 'checkout') {
+        // lưu orders
+        $name = $_POST['name'];
+        $phone = $_POST['phone'];
+        $address = $_POST['address'];
+        $method_payment = $_POST['payment'];
+        $user_id = $_SESSION['user_id'];
+        /**
+         * b1: thêm orders trước
+         * sau đó lấy lastId tạo ra.
+         * duyệt qua cart và thêm vào order_detail
+         * status: 'pending', 'confirm', 'delivery', 'complete'
+         */
+        $total = 0;
+        foreach ($result_getcart as $item) {
+          $total += $item['gia'] * $item['quantity'];
+        }
+        $date = date('Y-m-d H:i:s');
+        $query_add_order = "INSERT INTO orders(address, phone,user_id, status, total, created_at, method_payment) values (?,?,?,?,?,?,?)";
+        $check_insert = $db_utils->execute($query_add_order, [
+          $address,
+          $phone,
+          $user_id,
+          'pending',
+          $total,
+          $date,
+          $method_payment
+        ]);
+        $order_id = $db_utils->getLastInsertId();
+        foreach ($result_getcart as $item) {
+          $query_insert_order_detail = "INSERT INTO order_details(order_id, product_id, price, quantity) value(?,?,?,?)";
+          $check_insert = $db_utils->execute($query_insert_order_detail, [$order_id, $item['maSP'], $item['gia'], $item['quantity']]);
+        }
+        //xoá cart
+        $query_clear_cart = "DELETE FROM carts where user_id = ?";
+        $db_utils->execute($query_clear_cart, [$user_id]);
+        // redirect ->
+        header('Location: order-success.php');
+      } else {
+      }
+    }
+  }
+  ?>
   <div class="container" style="max-width: 980px; margin-top: 40px;">
     <!-- Navigation menu -->
     <nav class="menu d-flex align-items-center mb-4">
@@ -58,35 +157,35 @@
                 </tr>
               </thead>
               <tbody id="cart-body">
-                <?php if(count($result_getcart) > 0){
-                  foreach($result_getcart as $item){
-                 ?>
-                <!-- Demo cart items -->
-                <tr data-id="1">
-                  <td>
-                    <img src="<?= $item['hinhAnh'] ?>" alt="<?= $item['tenSP'] ?>" class="cart-product-img" />
-                  </td>
-                  <td>
-                    <div class="fw-semibold"><?= $item['tenSP'] ?></div>
-                    <div class="text-muted small"><?= $item['maLoai'] ?></div>
-                  </td>
-                  <td><?= $item['gia'] ?></td>
-                  <td>
-                    <input type="number" class="form-control form-control-sm cart-qty" min="1" max="<?= $item['soLuong'] ?>" value="<?= $item['quantity'] ?>" style="width:72px;" />
-                  </td>
-                  <td class="cart-item-total"><?= $item['gia']*$item['quantity'];
-                    $total += $item['gia']*$item['quantity'];
-                  ?></td>
-                  <td>
-                    <button class="btn btn-link text-danger cart-remove px-1" title="Remove">
-                      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path d="M6 6l12 12M6 18L18 6"/>
-                      </svg>
-                    </button>
-                  </td>
-                </tr>
-                <?php }?>
-                <?php }?>
+                <?php if (count($result_getcart) > 0) {
+                  foreach ($result_getcart as $item) {
+                ?>
+                    <!-- Demo cart items -->
+                    <tr data-id="1">
+                      <td>
+                        <img src="<?= $item['hinhAnh'] ?>" alt="<?= $item['tenSP'] ?>" class="cart-product-img" />
+                      </td>
+                      <td>
+                        <div class="fw-semibold"><?= $item['tenSP'] ?></div>
+                        <div class="text-muted small"><?= $item['maLoai'] ?></div>
+                      </td>
+                      <td><?= $item['gia'] ?></td>
+                      <td>
+                        <input type="number" class="form-control form-control-sm cart-qty" min="1" max="<?= $item['soLuong'] ?>" value="<?= $item['quantity'] ?>" style="width:72px;" />
+                      </td>
+                      <td class="cart-item-total"><?= $item['gia'] * $item['quantity'];
+                                                  $total += $item['gia'] * $item['quantity'];
+                                                  ?></td>
+                      <td>
+                        <button class="btn btn-link text-danger cart-remove px-1" title="Remove">
+                          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M6 6l12 12M6 18L18 6" />
+                          </svg>
+                        </button>
+                      </td>
+                    </tr>
+                  <?php } ?>
+                <?php } ?>
               </tbody>
             </table>
             <div id="cart-empty" class="text-center text-muted py-4 d-none">
@@ -118,7 +217,7 @@
     <!-- Checkout Section -->
     <section class="checkout-form mb-5" id="checkout">
       <h2 class="mb-4" style="font-family: 'Playfair Display', serif;">Checkout</h2>
-      <form id="orderForm" class="row g-3">
+      <form id="orderForm" class="row g-3" method="POST" action="">
         <div class="col-md-6">
           <label class="form-label">Full Name</label>
           <input type="text" class="form-control" name="name" required />
@@ -135,13 +234,12 @@
           <label class="form-label">Payment Method</label>
           <select class="form-select" name="payment" required>
             <option value="">Select…</option>
-            <option>Cash on Delivery</option>
-            <option>Bank Transfer</option>
-            <option>Credit Card</option>
+            <option value="cod">Cash on Delivery</option>
+            <option value="bank">Bank Transfer</option>
           </select>
         </div>
         <div class="col-12 text-end">
-          <button class="btn btn-success">Place Order</button>
+          <button type="submit" name="action" value="checkout" class="btn btn-success">Place Order</button>
         </div>
       </form>
       <div id="order-success" class="alert alert-success mt-4 d-none">
@@ -149,53 +247,6 @@
       </div>
     </section>
   </div>
-
-  <script>
-    // Demo JS to handle cart summary and item updates
-    function recalcCart() {
-      let subtotal = 0;
-      document.querySelectorAll('#cart-body tr').forEach(tr => {
-        const price = parseInt(tr.children[2].innerText.replace(/\D/g, ''));
-        const qty = parseInt(tr.querySelector('.cart-qty').value);
-        const itemTotal = price * qty;
-        tr.querySelector('.cart-item-total').innerText = '$' + itemTotal;
-        subtotal += itemTotal;
-      });
-      document.getElementById('cart-subtotal').innerText = '$' + subtotal;
-      const shipping = subtotal > 0 ? 20 : 0;
-      document.getElementById('cart-shipping').innerText = '$' + shipping;
-      document.getElementById('cart-total').innerText = '$' + (subtotal + shipping);
-      document.getElementById('cart-empty').classList.toggle('d-none', subtotal > 0);
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-      document.querySelectorAll('.cart-qty').forEach(input => {
-        input.addEventListener('input', recalcCart);
-      });
-      document.querySelectorAll('.cart-remove').forEach(btn => {
-        btn.addEventListener('click', function() {
-          btn.closest('tr').remove();
-          recalcCart();
-        });
-      });
-      recalcCart();
-
-      // Scroll to checkout on click
-      document.getElementById('checkout-btn').onclick = function(e) {
-        e.preventDefault();
-        document.getElementById('checkout').scrollIntoView({behavior: "smooth"});
-      };
-
-      // Handle order form
-      document.getElementById('orderForm').onsubmit = function(e) {
-        e.preventDefault();
-        document.getElementById('order-success').classList.remove('d-none');
-        setTimeout(() => {
-          document.getElementById('order-success').classList.add('d-none');
-        }, 4000);
-        window.scrollTo({top: 0, behavior: "smooth"});
-      };
-    });
-  </script>
 </body>
+
 </html>
